@@ -8,7 +8,7 @@
   const datePt = d => d ? new Date(d+"T12:00:00").toLocaleDateString("pt-BR") : "—";
   const today = () => new Date().toISOString().slice(0,10);
   const defaultData = () => ({business:"Minha assistência", orders:[], clients:[], technicians:[]});
-  let data = loadData(), modalType = "order", toastTimer;
+  let data = loadData(), modalType = "order", editingOrderId = null, toastTimer;
   function loadData(){try{return {...defaultData(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return defaultData()}}
   function save(){localStorage.setItem(KEY,JSON.stringify(data));render(); if(window.wfrozCloud?.user) window.wfrozCloud.saveData(data).catch(e=>showToast("Erro ao sincronizar nuvem: "+(e.message||e)));}
   function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -80,24 +80,33 @@
     else control=`<input name="${name}" type="${type}" placeholder="${esc(placeholder)}" ${required?"required":""} ${name==="value"?'min="0" step="0.01"':''} ${name==="date"?`value="${today()}"`:''}>`;
     return `<div class="field-group ${span==="full"?"full":""}"><label for="field-${name}">${label}${required?' <span style="color:#d35450">*</span>':''}</label>${control}</div>`.replace(`name="${name}"`,`name="${name}" id="field-${name}"`);
   }
-  function openModal(type){
-    modalType=type;const titles={order:"Nova ordem de serviço",client:"Novo cliente",technician:"Adicionar técnico"};
-    document.getElementById("modal-title").textContent=titles[type];
-    document.getElementById("submit-modal").textContent=type==="order"?"Criar ordem":"Salvar cadastro";
+  function openModal(type, record=null){
+    modalType=type;editingOrderId=record?.id||null;
+    const titles={order:"Nova ordem de serviço",editOrder:"Editar ordem de serviço",client:"Novo cliente",technician:"Adicionar técnico"};
+    document.getElementById("modal-title").textContent=titles[type]||"Cadastro";
+    document.getElementById("submit-modal").textContent=type==="order"?"Criar ordem":type==="editOrder"?"Salvar alterações":"Salvar cadastro";
     document.getElementById("form-error").textContent="";
-    document.getElementById("modal-fields").innerHTML=fields[type].map(fieldHtml).join("");
+    const formFields=type==="editOrder"?fields.order:fields[type];
+    document.getElementById("modal-fields").innerHTML=formFields.map(fieldHtml).join("");
+    if(record){
+      const form=document.getElementById("modal-form");
+      formFields.forEach(([name])=>{const el=form.elements.namedItem(name);if(el)el.value=record[name]??(name==="warranty"?90:name==="status"?"Aguardando":"");});
+    }
     document.getElementById("modal-backdrop").hidden=false;
     setTimeout(()=>document.querySelector("#modal-fields input")?.focus(),50);
   }
   function closeModal(){document.getElementById("modal-backdrop").hidden=true;document.getElementById("modal-form").reset()}
   document.getElementById("modal-form").addEventListener("submit",e=>{
     e.preventDefault();const fd=new FormData(e.currentTarget),v=Object.fromEntries(fd.entries());
-    if(modalType==="order"){
-      const order={...v,id:nextId(),date:v.date||today(),status:v.status||"Aguardando",value:Number(v.value)||0,warranty:Number(v.warranty)||90,warrantyTerms:v.warrantyTerms||"Garantia cobre apenas o serviço realizado e a peça substituída; não cobre mau uso, quedas, líquidos ou violação por terceiros."};
-      data.orders.unshift(order);
-      const exists=data.clients.some(c=>c.name.trim().toLowerCase()===v.client.trim().toLowerCase());
-      if(!exists&&v.client.trim())data.clients.push({name:v.client.trim(),phone:v.phone,email:"",notes:""});
-      closeModal();save();go("orders");showToast("Ordem de serviço criada com sucesso.");
+    if(modalType==="order"||modalType==="editOrder"){
+      const order={...v,id:modalType==="editOrder"?editingOrderId:nextId(),date:v.date||today(),status:v.status||"Aguardando",value:Number(v.value)||0,warranty:Number(v.warranty)||90,warrantyTerms:v.warrantyTerms||"Garantia cobre apenas o serviço realizado e a peça substituída; não cobre mau uso, quedas, líquidos ou violação por terceiros."};
+      if(modalType==="editOrder"){
+        const index=data.orders.findIndex(o=>o.id===editingOrderId);
+        if(index>=0)data.orders[index]={...data.orders[index],...order};
+      }else data.orders.unshift(order);
+      const exists=data.clients.some(c=>(c.name||"").trim().toLowerCase()===String(v.client||"").trim().toLowerCase());
+      if(!exists&&String(v.client||"").trim())data.clients.push({name:String(v.client).trim(),phone:v.phone||"",email:"",notes:""});
+      closeModal();save();go("orders");showToast(modalType==="editOrder"?"Ordem atualizada com sucesso.":"Ordem de serviço criada com sucesso.");
     }else if(modalType==="client"){
       data.clients.push({name:v.name.trim(),phone:v.phone,email:v.email,notes:v.notes});
       closeModal();save();go("clients");showToast("Cliente cadastrado com sucesso.");
@@ -132,20 +141,9 @@
     </style></head><body><article class="sheet"><header class="head"><div style="display:flex;align-items:center;gap:14px"><img src="data:image/jpeg;base64,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" alt="Logo da assistência" style="width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #ffffff40"><div><div class="brand">WFROZ<span>.</span></div><div class="sub">GESTÃO TÉCNICA · ASSISTÊNCIA</div></div></div><div class="tag">ORDEM ${esc(o.id)}</div></header><main class="body"><h2>Relatório de serviço</h2><div class="grid"><div class="item"><span class="label">Cliente</span><div class="value">${esc(o.client||"—")}</div></div><div class="item"><span class="label">Telefone</span><div class="value">${esc(o.phone||"—")}</div></div><div class="item"><span class="label">Aparelho</span><div class="value">${esc(o.device||"—")}</div></div><div class="item"><span class="label">Data de entrada</span><div class="value">${datePt(o.date)}</div></div><div class="item"><span class="label">Data de saída</span><div class="value">${o.exitDate?datePt(o.exitDate):"Não informada"}</div></div><div class="item full"><span class="label">Defeito relatado</span><div class="value">${esc(o.problem||"—")}</div></div><div class="item full"><span class="label">Serviço realizado / observações</span><div class="value">${esc(o.notes||"—")}</div></div><div class="item"><span class="label">Status</span><div class="value">${esc(o.status||"—")}</div></div><div class="item"><span class="label">Valor do serviço</span><div class="value"><b>${money(o.value)}</b></div></div></div><h2>Termo de garantia · ${warrantyDays} dias</h2><div class="warranty">${esc(o.warrantyTerms||"Garantia cobre apenas o serviço realizado e a peça substituída; não cobre mau uso, quedas, líquidos ou violação por terceiros.")}</div><div class="grid" style="margin-top:12px"><div class="item"><span class="label">Data da entrega</span><div class="value">${delivered?datePt(delivered):"____/____/________"}</div></div><div class="item"><span class="label">Garantia válida até</span><div class="value">${validUntil}</div></div></div><p style="font-size:11px;line-height:1.6;margin-top:18px">Declaro que recebi as informações deste relatório e uma cópia do termo de garantia.</p><div class="sign"><div>Assinatura do cliente</div><div>Assinatura da assistência</div></div></main><footer class="foot"><span>${esc(data.business||"WFROZ · Assistência técnica")}</span><span>Documento emitido em ${new Date().toLocaleDateString("pt-BR")}</span></footer></article><div class="actions"><button onclick="window.print()">Imprimir / Salvar em PDF</button><button onclick="window.close()">Fechar</button></div></body></html>`);w.document.close();
   }
   function editOrder(id){
-    const o=data.orders.find(x=>x.id===id);if(!o)return;
-    const ask=(label,current)=>prompt(label,current??"");
-    const client=ask("Editar nome do cliente:",o.client);if(client===null)return;
-    const phone=ask("Editar telefone:",o.phone||"");if(phone===null)return;
-    const device=ask("Editar aparelho/modelo:",o.device);if(device===null)return;
-    const problem=ask("Editar defeito relatado:",o.problem);if(problem===null)return;
-    const notes=ask("Editar serviço realizado / observações:",o.notes||"");if(notes===null)return;
-    const value=ask("Editar valor do serviço (R$):",String(o.value??0));if(value===null)return;
-    const parsed=Number(value.replace(",","."));if(!Number.isFinite(parsed)||parsed<0){showToast("Informe um valor válido.");return}
-    const warranty=ask("Prazo de garantia em dias:",String(o.warranty??90));if(warranty===null)return;
-    const days=Number(warranty);if(!Number.isFinite(days)||days<0){showToast("Informe um prazo de garantia válido.");return}
-    const terms=ask("Condições da garantia:",o.warrantyTerms||"Garantia cobre apenas o serviço realizado e a peça substituída; não cobre mau uso, quedas, líquidos ou violação por terceiros.");if(terms===null)return;
-    o.client=client.trim()||o.client;o.phone=phone.trim();o.device=device.trim()||o.device;o.problem=problem.trim();o.notes=notes.trim();o.value=parsed;o.warranty=days;o.warrantyTerms=terms.trim();
-    save();showToast("Ordem, relatório e garantia atualizados.");
+    const order=data.orders.find(x=>x.id===id);
+    if(!order){showToast("Não foi possível localizar essa ordem.");return;}
+    openModal("editOrder",order);
   }
   function cycleStatus(id){const o=data.orders.find(x=>x.id===id);if(!o)return;const i=statuses.indexOf(o.status);o.status=statuses[(i+1)%statuses.length];save();showToast(`Status de ${id} alterado para "${o.status}".`)}
   function renderClients(){
