@@ -1,26 +1,14 @@
-# Conserta — painel demonstrativo de assistência técnica
+# WFROZ — versão personalizada
 
-Projeto front-end em HTML, CSS e JavaScript, inspirado em um painel de gestão de assistência técnica.
+## O que mudou
+- Tema escuro/preto com azul saturado no menu.
+- Botão para ocultar/mostrar o menu principal.
+- Botão de tela cheia.
+- Campos de prazo e condições de garantia nas novas ordens.
+- Ações na lista de ordens para editar prazo/termos/observações e imprimir relatório + termo de garantia.
 
-## Arquivos
-- `index.html`: estrutura da interface
-- `style.css`: estilos responsivos
-- `script.js`: navegação, cadastros e armazenamento local
+## Login Google e acesso compartilhado
+O projeto original é estático e salva tudo no `localStorage`, portanto os dados não são compartilhados entre dispositivos. Para login Google real e acesso simultâneo por outras pessoas, é necessário configurar um backend, por exemplo Firebase Authentication (provedor Google) + Cloud Firestore, e definir regras de segurança. Na tela Configurações, o botão “Configurar login Google” explica o passo inicial; ele não ativa o login automaticamente. Não publique dados reais de clientes até configurar autenticação, banco de dados e regras adequadas.
 
-## Como testar
-Abra `index.html` no navegador. Para publicar, envie os três arquivos para a raiz de um repositório público no GitHub.
-
-## Publicar no GitHub Pages
-1. Crie um repositório público.
-2. Envie `index.html`, `style.css` e `script.js` para a raiz.
-3. Abra **Settings → Pages**.
-4. Em **Build and deployment**, selecione **Deploy from a branch**.
-5. Escolha a branch `main` e a pasta `/(root)`, depois clique em **Save**.
-
-## Limitações
-Este é um protótipo estático. Os dados ficam no `localStorage` do navegador atual, não em uma base de dados compartilhada. Não use para guardar dados pessoais sensíveis nem como sistema de produção sem backend, autenticação, backups e controles de acesso.
-
-O GitHub Pages é voltado a sites estáticos e tem limitações para serviços comerciais/SaaS. Verifique os termos do serviço antes de usá-lo para operar um sistema de negócio.
-
-## Nota de independência
-Projeto demonstrativo independente, sem afiliação com o site original. A implementação foi escrita para este projeto e não é o código-fonte original.
+## Publicar
+Envie `index.html`, `style.css` e `script.js` para o seu repositório GitHub Pages.
