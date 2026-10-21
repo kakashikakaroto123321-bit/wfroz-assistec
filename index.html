@@ -1,4 +1,4 @@
-a<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -36,12 +36,13 @@ a<!doctype html>
 
     <main class="main">
       <header class="topbar">
+        <div class="top-brand"><div class="top-brand-mark"><img src="./frozimagem.jpg" alt="WFROZ"></div><strong>WFROZ<span>.</span></strong><i></i><small>GESTÃO TÉCNICA</small></div>
         <button class="mobile-menu" id="mobile-menu" aria-label="Abrir menu">☰</button><button class="secondary-btn" id="sidebar-toggle" title="Ocultar/mostrar menu">☷ Menu</button><button class="secondary-btn" id="fullscreen-toggle" title="Tela cheia">⛶ Tela cheia</button>
         <div class="breadcrumb">Minha assistência <span>/</span> <strong id="breadcrumb-page">Visão geral</strong></div>
         <div class="top-actions">
-          <div class="today" id="today-label"></div>
-          <button class="icon-button" id="notifications" aria-label="Notificações">♧<i></i></button>
-          <div class="top-avatar">WF</div>
+          <div class="date-block"><span class="header-symbol">▦</span><div class="today" id="today-label"></div></div>
+          <div class="clock-block"><span class="header-symbol">◷</span><strong id="header-clock">00:00</strong></div>
+          <div class="admin-block"><div class="top-avatar">●</div><div><strong id="header-user-name">Administrador</strong><small>Painel de Controle</small></div></div>
         </div>
       </header>
       <div class="content">
@@ -104,7 +105,7 @@ a<!doctype html>
 
         <section class="page" id="page-settings">
           <div class="page-heading"><div><div class="eyebrow">PERSONALIZAÇÃO</div><h1>Configurações</h1><p class="subtitle">Personalize o nome da sua assistência e gerencie os dados locais.</p></div></div>
-          <div class="panel settings-panel"><h2>Dados da assistência</h2><label class="field-label" for="business-name">Nome da assistência</label><input class="field-input" id="business-name" value="Minha assistência"><button class="primary-btn" id="save-settings">Salvar alterações</button><hr><h2>Dados deste navegador</h2><p class="muted">Os cadastros ficam salvos neste navegador e neste dispositivo. Eles não são compartilhados com outros usuários.</p><button class="secondary-btn" id="export-data">Exportar backup (JSON)</button> <button class="danger-btn" id="clear-data">Apagar todos os dados</button><hr><h2>Acesso com Google</h2><p class="muted">Para permitir que outras pessoas entrem com suas próprias contas Google e compartilhem os mesmos cadastros, configure Firebase Authentication e Firestore. O botão abaixo abre as instruções de configuração; só o login visual não protege os dados.</p><button class="secondary-btn" id="google-setup">Configurar login Google</button><div class="disclaimer"><strong>Projeto demonstrativo independente.</strong><br>Esta interface foi criada como uma recriação educacional e não é afiliada ao site original.</div></div>
+          <div class="panel settings-panel"><h2>Dados da assistência</h2><label class="field-label" for="business-name">Nome da assistência</label><input class="field-input" id="business-name" value="Minha assistência"><button class="primary-btn" id="save-settings">Salvar alterações</button><hr><h2>Dados deste navegador</h2><p class="muted">Os cadastros ficam salvos neste navegador e neste dispositivo. Eles não são compartilhados com outros usuários.</p><button class="secondary-btn" id="export-data">Exportar backup (JSON)</button> <button class="danger-btn" id="clear-data">Apagar todos os dados</button><hr><h2>Acesso com Google</h2><p class="muted">Para permitir que outras pessoas entrem com suas próprias contas Google e compartilhem os mesmos cadastros, configure Firebase Authentication e Firestore. O botão abaixo abre as instruções de configuração; só o login visual não protege os dados.</p><button class="secondary-btn" id="google-setup">Entrar com Google / Sincronizar</button><p class="muted" id="firebase-status">Os dados continuam neste navegador até configurar o Firebase e entrar com uma conta autorizada.</p><div class="disclaimer"><strong>Projeto demonstrativo independente.</strong><br>Esta interface foi criada como uma recriação educacional e não é afiliada ao site original.</div></div>
         </section>
       </div>
     </main>
@@ -117,6 +118,7 @@ a<!doctype html>
     </section>
   </div>
   <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="firebase-app.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

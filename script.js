@@ -10,7 +10,7 @@
   const defaultData = () => ({business:"Minha assistência", orders:[], clients:[], technicians:[]});
   let data = loadData(), modalType = "order", toastTimer;
   function loadData(){try{return {...defaultData(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return defaultData()}}
-  function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+  function save(){localStorage.setItem(KEY,JSON.stringify(data));render(); if(window.wfrozCloud?.user) window.wfrozCloud.saveData(data).catch(e=>showToast("Erro ao sincronizar nuvem: "+(e.message||e)));}
   function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
   function showToast(message){const t=document.getElementById("toast");t.textContent=message;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2600)}
   function nextId(){return "OS-"+String(Date.now()).slice(-6)}
@@ -22,9 +22,11 @@
   document.getElementById("sidebar-toggle").addEventListener("click",()=>{document.body.classList.toggle("sidebar-hidden");localStorage.setItem("conserta-sidebar-hidden",document.body.classList.contains("sidebar-hidden")?"1":"0")});
   if(localStorage.getItem("conserta-sidebar-hidden")==="1")document.body.classList.add("sidebar-hidden");
   document.getElementById("fullscreen-toggle").addEventListener("click",async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{showToast("Tela cheia não disponível neste navegador.")}});
-  document.getElementById("google-setup").addEventListener("click",()=>alert("Para ativar: crie um projeto em console.firebase.google.com, habilite Authentication > Google e Firestore Database, registre este domínio em Authentication > Settings > Authorized domains e configure as credenciais no projeto. Para compartilhar dados entre usuários, os cadastros precisam migrar do localStorage para o Firestore com regras de segurança."));
+  document.getElementById("google-setup").addEventListener("click",async()=>{try{if(!window.wfrozCloud)throw new Error("Firebase ainda está carregando. Atualize a página.");if(window.wfrozCloud.user){await window.wfrozCloud.logout();showToast("Você saiu da conta Google.");return;}const result=await window.wfrozCloud.login();data=await window.wfrozCloud.loadData();localStorage.setItem(KEY,JSON.stringify(data));render();showToast("Conectado à nuvem como "+(result.displayName||result.email));document.getElementById("google-setup").textContent="Sair da conta Google";}catch(e){console.error(e);alert("Não foi possível conectar ao Firebase. Confira firebase-config.js, login Google e se seu usuário foi cadastrado como membro no Firestore.\n\nDetalhe: "+(e.message||e));}});
 
-  document.getElementById("today-label").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+  const updateHeaderClock=()=>{const clock=document.getElementById("header-clock");if(clock)clock.textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",hour12:false});};
+  document.getElementById("today-label").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"short",year:"numeric"});
+  updateHeaderClock();setInterval(updateHeaderClock,15000);
   document.getElementById("notifications").addEventListener("click",()=>showToast("Você está em dia com as notificações."));
   document.getElementById("help-btn").addEventListener("click",()=>showToast("Dica: atualize o status de cada ordem conforme o reparo avança."));
   ["new-order-top","empty-new-order","quick-order","new-order-list","new-device"].forEach(id=>document.getElementById(id).addEventListener("click",()=>openModal("order")));
@@ -186,4 +188,5 @@
   document.getElementById("export-data").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup-wfroz.json";a.click();URL.revokeObjectURL(a.href);showToast("Backup exportado.")});
   document.getElementById("clear-data").addEventListener("click",()=>{if(confirm("Tem certeza que deseja apagar todos os clientes, técnicos e ordens salvos neste navegador? Esta ação não pode ser desfeita.")){data=defaultData();save();showToast("Dados locais apagados.")}});
   render();
+  window.wfrozRefreshFromCloud = async () => { if(window.wfrozCloud?.user){ try { data=await window.wfrozCloud.loadData(); localStorage.setItem(KEY,JSON.stringify(data)); render(); document.getElementById("google-setup").textContent="Sair da conta Google"; } catch(e){console.error(e);} } };
 })();

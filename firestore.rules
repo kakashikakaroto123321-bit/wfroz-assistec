@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn(){ return request.auth != null; }
+  function memberPath(b){ return /databases/$(database)/documents/businesses/$(b)/members/$(request.auth.uid); }
+  function isMember(b){ return signedIn() && exists(memberPath(b)) && get(memberPath(b)).data.active == true; }
+  function isAdmin(b){ return isMember(b) && get(memberPath(b)).data.role == 'admin'; }
+  match /businesses/{businessId} {
+   allow read: if isMember(businessId);
+   allow create, delete: if false;
+   allow update: if isAdmin(businessId);
+   match /members/{uid} {
+    allow read: if isAdmin(businessId) || (signedIn() && request.auth.uid == uid && isMember(businessId));
+    allow create, update: if isAdmin(businessId) && request.resource.data.keys().hasOnly(['role','active','displayName','email','createdAt']) && request.resource.data.role in ['admin','employee'] && request.resource.data.active is bool;
+    allow delete: if isAdmin(businessId) && uid != request.auth.uid;
+   }
+   match /appData/{docId} { allow read, write: if isMember(businessId) && docId == 'main'; }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
