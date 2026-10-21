@@ -6,7 +6,8 @@
   const initials = name => (name || "?").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
   const money = n => Number(n || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   const datePt = d => d ? new Date(d+"T12:00:00").toLocaleDateString("pt-BR") : "—";
-  const today = () => new Date().toISOString().slice(0,10);
+  const manaUsParts = () => new Intl.DateTimeFormat("en-CA",{timeZone:"America/Manaus",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+  const today = () => manaUsParts();
   const defaultData = () => ({business:"Minha assistência", orders:[], clients:[], technicians:[]});
   let data = loadData(), modalType = "order", editingOrderId = null, toastTimer;
   function loadData(){try{return {...defaultData(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return defaultData()}}
@@ -24,8 +25,8 @@
   document.getElementById("fullscreen-toggle").addEventListener("click",async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{showToast("Tela cheia não disponível neste navegador.")}});
   document.getElementById("google-setup").addEventListener("click",async()=>{try{if(!window.wfrozCloud)throw new Error("Firebase ainda está carregando. Atualize a página.");if(window.wfrozCloud.user){await window.wfrozCloud.logout();showToast("Você saiu da conta Google.");return;}const result=await window.wfrozCloud.login();data=await window.wfrozCloud.loadData();localStorage.setItem(KEY,JSON.stringify(data));render();showToast("Conectado à nuvem como "+(result.displayName||result.email));document.getElementById("google-setup").textContent="Sair da conta Google";}catch(e){console.error(e);alert("Não foi possível conectar ao Firebase. Confira firebase-config.js, login Google e se seu usuário foi cadastrado como membro no Firestore.\n\nDetalhe: "+(e.message||e));}});
 
-  const updateHeaderClock=()=>{const clock=document.getElementById("header-clock");if(clock)clock.textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",hour12:false});};
-  document.getElementById("today-label").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"short",year:"numeric"});
+  const manaUsTimeZone = "America/Manaus";
+  const updateHeaderClock=()=>{const now=new Date();const clock=document.getElementById("header-clock");if(clock)clock.textContent=new Intl.DateTimeFormat("pt-BR",{timeZone:manaUsTimeZone,hour:"2-digit",minute:"2-digit",hour12:false}).format(now);const todayLabel=document.getElementById("today-label");if(todayLabel)todayLabel.textContent=new Intl.DateTimeFormat("pt-BR",{timeZone:manaUsTimeZone,weekday:"long",day:"2-digit",month:"short",year:"numeric"}).format(now);};
   updateHeaderClock();setInterval(updateHeaderClock,15000);
   document.getElementById("notifications")?.addEventListener("click",()=>showToast("Você está em dia com as notificações."));
   document.getElementById("help-btn").addEventListener("click",()=>showToast("Dica: atualize o status de cada ordem conforme o reparo avança."));
