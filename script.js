@@ -27,7 +27,7 @@
   const updateHeaderClock=()=>{const clock=document.getElementById("header-clock");if(clock)clock.textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",hour12:false});};
   document.getElementById("today-label").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"short",year:"numeric"});
   updateHeaderClock();setInterval(updateHeaderClock,15000);
-  document.getElementById("notifications").addEventListener("click",()=>showToast("Você está em dia com as notificações."));
+  document.getElementById("notifications")?.addEventListener("click",()=>showToast("Você está em dia com as notificações."));
   document.getElementById("help-btn").addEventListener("click",()=>showToast("Dica: atualize o status de cada ordem conforme o reparo avança."));
   ["new-order-top","empty-new-order","quick-order","new-order-list","new-device"].forEach(id=>document.getElementById(id).addEventListener("click",()=>openModal("order")));
   document.getElementById("new-client").addEventListener("click",()=>openModal("client"));
