@@ -155,3 +155,7 @@ h1{color:#fff;font-weight:900;letter-spacing:-1.35px}.subtitle{color:#a9c9f3;fon
 /* Mantém contraste e usabilidade em telas menores */
 @media(max-width:900px){.topbar{padding:0 14px}.content{padding:22px 14px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-grid{grid-template-columns:1fr}.top-actions{gap:8px}}
 @media(max-width:560px){.stats-grid{grid-template-columns:1fr}.topbar{gap:8px}.breadcrumb{display:none}.top-brand small{display:none}.top-actions .today{font-size:10px}.admin-block div:nth-child(2){display:none}.welcome-row,.page-heading{align-items:flex-start;flex-direction:column}.primary-btn{max-width:100%}}
+
+/* Logo WFROZ fornecida pelo usuário */
+.brand-mark img,.top-brand-mark img{width:100%;height:100%;object-fit:contain;display:block;background:linear-gradient(135deg,#087bff,#00d9ff);border-radius:inherit;padding:2px}
+.top-brand-mark{overflow:hidden;border-radius:13px;box-shadow:0 0 24px #007bff66}
