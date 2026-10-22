@@ -48,6 +48,7 @@
       ["phone","Telefone","tel","(00) 00000-0000",true],
       ["device","Aparelho / modelo","text","Ex.: Samsung Galaxy A54",true],
       ["problem","Defeito relatado","textarea","Descreva o problema informado",true,"full"],
+      ["checklist","CHECKLIST","checklist","",false,"full"],
       ["technician","Técnico responsável","select","",false],
       ["status","Status","select","",true],
       ["value","Valor estimado (R$)","number","0,00",false],
@@ -74,7 +75,10 @@
     const [name,label,type,placeholder,_required,span]=f;
     const required=false; // Todos os campos são opcionais, conforme solicitado.
     let control="";
-    if(type==="select"){
+    if(type==="checklist"){
+      const items=["Capinha","Gaveta de chip","Cartão de memória","Chip","Algo atrás da capinha"];
+      control=`<div class="checklist-options">${items.map(item=>`<label class="checklist-option"><input type="checkbox" name="checklist" value="${esc(item)}"><span>${esc(item)}</span></label>`).join("")}</div>`;
+    } else if(type==="select"){
       const opts=name==="status"?statuses:data.technicians.map(t=>t.name);
       control=`<select name="${name}" ${required?"required":""}><option value="">${name==="status"?"Selecione o status":"Sem atribuição"}</option>${opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("")}</select>`;
     } else if(type==="textarea") control=`<textarea name="${name}" placeholder="${esc(placeholder)}" ${required?"required":""}></textarea>`;
@@ -91,14 +95,21 @@
     document.getElementById("modal-fields").innerHTML=formFields.map(fieldHtml).join("");
     if(record){
       const form=document.getElementById("modal-form");
-      formFields.forEach(([name])=>{const el=form.elements.namedItem(name);if(el)el.value=record[name]??(name==="warranty"?90:name==="status"?"Aguardando":"");});
+      formFields.forEach(([name])=>{
+        if(name==="checklist"){
+          const selected=Array.isArray(record.checklist)?record.checklist:[];
+          form.querySelectorAll('input[name="checklist"]').forEach(cb=>cb.checked=selected.includes(cb.value));
+          return;
+        }
+        const el=form.elements.namedItem(name);if(el)el.value=record[name]??(name==="warranty"?90:name==="status"?"Aguardando":"");
+      });
     }
     document.getElementById("modal-backdrop").hidden=false;
     setTimeout(()=>document.querySelector("#modal-fields input")?.focus(),50);
   }
   function closeModal(){document.getElementById("modal-backdrop").hidden=true;document.getElementById("modal-form").reset()}
   document.getElementById("modal-form").addEventListener("submit",e=>{
-    e.preventDefault();const fd=new FormData(e.currentTarget),v=Object.fromEntries(fd.entries());
+    e.preventDefault();const fd=new FormData(e.currentTarget),v=Object.fromEntries(fd.entries());v.checklist=fd.getAll("checklist");
     if(modalType==="order"||modalType==="editOrder"){
       const order={...v,id:modalType==="editOrder"?editingOrderId:nextId(),date:v.date||today(),status:v.status||"Aguardando",value:Number(v.value)||0,warranty:Number(v.warranty)||90,warrantyTerms:v.warrantyTerms||"Garantia cobre apenas o serviço realizado e a peça substituída; não cobre mau uso, quedas, líquidos ou violação por terceiros."};
       if(modalType==="editOrder"){
